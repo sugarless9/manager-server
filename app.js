@@ -5,45 +5,64 @@ const json = require('koa-json')
 const onerror = require('koa-onerror')
 const bodyparser = require('koa-bodyparser')
 const logger = require('koa-logger')
+const koajwt = require('koa-jwt')
 const router = require('koa-router')()
 const users = require('./routes/users')
+const util = require('./utils/util')
 
-// error handler
+// 错误处理
 onerror(app)
 
 // 连接数据库
 require('./config/db')
 
-// middlewares
-app.use(bodyparser({
-  enableTypes:['json', 'form', 'text']
-}))
+// 中间件
+app.use(
+  bodyparser({
+    enableTypes: ['json', 'form', 'text'],
+  })
+)
 app.use(json())
 app.use(logger())
 app.use(require('koa-static')(__dirname + '/public'))
 
-app.use(views(__dirname + '/views', {
-  extension: 'pug'
-}))
+app.use(
+  views(__dirname + '/views', {
+    extension: 'pug',
+  })
+)
 
 // logger
 app.use(async (ctx, next) => {
-  console.log(`get params:${JSON.stringify(ctx.request.query)}`);
-  console.log(`post params:${JSON.stringify(ctx.request.body)}`);
+  console.log(`get params:${JSON.stringify(ctx.request.query)}`)
+  console.log(`post params:${JSON.stringify(ctx.request.body)}`)
   const start = new Date()
-  await next()
-  const ms = new Date() - start
-  console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
+  await next().catch((err) => {
+    if (err.status == '401') {
+      ctx.status = 200
+      ctx.body = util.fail('身份认证失败，请重新登录', util.CODE.AUTH_ERROR)
+    } else {
+      throw err
+    }
+  })
+  console.log(`${ctx.method} ${ctx.url} - ${start}`)
 })
 
-// routes
+// token校验
+app.use(
+  koajwt({ secret: 'tangsssss' }).unless({
+    path: [/^\/api\/users\/login/],
+  })
+)
+
+// 路由
 router.prefix('/api')
 router.use(users.routes(), users.allowedMethods())
 app.use(router.routes(), router.allowedMethods())
 
-// error-handling
+// 错误处理
 app.on('error', (err, ctx) => {
   console.error('server error', err, ctx)
-});
+})
 
 module.exports = app

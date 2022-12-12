@@ -45,12 +45,12 @@ router.post('/login', async (ctx) => {
       )
       data.token = token
       ctx.body = util.success(data)
-    } else {
-      ctx.body = util.fail('账号或密码不正确')
+      return
     }
+    ctx.body = util.fail('账号或密码不正确', util.CODE.USER_ACCOUNT_ERROR)
   } catch (error) {
-    console.error(error)
-    ctx.body = util.fail(error.stack)
+    console.error(`${ctx.method} - ${ctx.url} - ${error}`)
+    ctx.body = util.fail(error.message)
   }
 })
 
@@ -78,8 +78,28 @@ router.get('/list', async (ctx) => {
       list,
     })
   } catch (error) {
-    console.error(error)
-    ctx.body = util.fail(error.stack)
+    console.error(`${ctx.method} - ${ctx.url} - ${error}`)
+    ctx.body = util.fail(error.message)
+  }
+})
+
+// 用户删除/批量删除
+router.post('/delete', async (ctx) => {
+  try {
+    // 待删除的用户Id数组
+    const { userIds } = ctx.request.body
+    console.log(userIds)
+    // 软删除（把用户状态更改为离职）
+    const res = await User.updateMany({ userId: { $in: userIds } }, { state: 2 })
+    console.log(res)
+    if (res.modifiedCount) {
+      ctx.body = util.success(res, '', `共删除成功${res.modifiedCount}条`)
+      return
+    }
+    ctx.body = util.fail('删除失败')
+  } catch (error) {
+    console.error(`${ctx.method} - ${ctx.url} - ${error}`)
+    ctx.body = util.fail(error.message)
   }
 })
 

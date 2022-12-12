@@ -27,14 +27,30 @@ module.exports = {
       skipIndex,
     }
   },
-  success(data = '', msg = '', code = CODE.SUCCESS) {
+
+  /**
+   * 成功返回结构封装
+   * @param {*} data 返回数据
+   * @param {*} code 返回状态码
+   * @param {*} msg 返回提示信息
+   * @returns
+   */
+  success(data = '', code = CODE.SUCCESS, msg = '') {
     return {
       code,
       data,
       msg,
     }
   },
-  fail(msg = '', code = CODE.BUSINESS_ERROR,data='') {
+
+  /**
+   * 失败返回结构封装
+   * @param {*} msg 返回提示信息
+   * @param {*} code 返回状态码
+   * @param {*} data 返回数据
+   * @returns
+   */
+  fail(msg = '', code = CODE.BUSINESS_ERROR, data = '') {
     return {
       data,
       code,

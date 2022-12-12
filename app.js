@@ -49,11 +49,11 @@ app.use(async (ctx, next) => {
 })
 
 // token校验
-app.use(
-  koajwt({ secret: 'tangsssss' }).unless({
-    path: [/^\/api\/users\/login/],
-  })
-)
+// app.use(
+//   koajwt({ secret: 'tangsssss' }).unless({
+//     path: [/^\/api\/users\/login/],
+//   })
+// )
 
 // 路由
 router.prefix('/api')

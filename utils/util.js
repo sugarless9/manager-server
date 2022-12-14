@@ -35,7 +35,7 @@ module.exports = {
    * @param {*} msg 返回提示信息
    * @returns
    */
-  success(data = '', code = CODE.SUCCESS, msg = '') {
+  success(data = '', msg = '', code = CODE.SUCCESS) {
     return {
       code,
       data,

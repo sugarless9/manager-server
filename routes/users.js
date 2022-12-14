@@ -3,6 +3,7 @@
  */
 const router = require('koa-router')()
 const User = require('./../models/userSchema')
+const Counter = require('./../models/counterSchema')
 const util = require('./../utils/util')
 const jwt = require('jsonwebtoken')
 
@@ -88,15 +89,72 @@ router.post('/delete', async (ctx) => {
   try {
     // 待删除的用户Id数组
     const { userIds } = ctx.request.body
-    console.log(userIds)
     // 软删除（把用户状态更改为离职）
     const res = await User.updateMany({ userId: { $in: userIds } }, { state: 2 })
     console.log(res)
     if (res.modifiedCount) {
-      ctx.body = util.success(res, '', `共删除成功${res.modifiedCount}条`)
+      ctx.body = util.success(res, `成功删除${res.modifiedCount}条`)
       return
     }
     ctx.body = util.fail('删除失败')
+  } catch (error) {
+    console.error(`${ctx.method} - ${ctx.url} - ${error}`)
+    ctx.body = util.fail(error.message)
+  }
+})
+
+// 用户新增/编辑
+router.post('/operate', async (ctx) => {
+  try {
+    // 成功返回提示信息
+    let info
+    // 获取参数
+    const { userId, userName, userEmail, mobile, job, state, sex, roleList, deptId, action } = ctx.request.body
+    if (action === 'add') {
+      // 用户新增
+      console.log(!userEmail);
+      if (!userName || !userEmail || !deptId) {
+        ctx.body = util.fail('参数错误', util.CODE.PARAM_ERROR)
+        return
+      }
+      // 查询名称或邮箱是否已存在
+      const res = await User.findOne({ $or: [{ userName }, { userEmail }] }, '_id userName userEmail')
+      if (res) {
+        ctx.body = util.fail(`系统监测到有重复的用户，信息如下：${res.userName} - ${res.userEmail}`)
+        return
+      }
+      // 用户ID自增长
+      const doc = await Counter.findOneAndUpdate({ _id: 'userId' }, { $inc: { sequence_value: 1 } }, { new: true })
+      // 创建新用户
+      const user = new User({
+        userId: doc.sequence_value,
+        userName,
+        userPwd: '123456',
+        userEmail,
+        role: 1, //默认普通用户
+        roleList,
+        job,
+        state,
+        deptId,
+        mobile,
+        sex,
+      })
+      user.save()
+      info = '用户创建成功'
+    } else if (action === 'edit') {
+      // 用户编辑
+      if (!deptId) {
+        ctx.body = util.fail('部门不能为空', util.CODE.PARAM_ERROR)
+        return
+      }
+      // 根据userId查询并更新
+      await User.findOneAndUpdate({ userId }, { mobile, job, state, roleList, deptId, sex })
+      info = '更新成功'
+    } else {
+      ctx.body = util.fail('action参数错误', util.CODE.PARAM_ERROR)
+      return
+    }
+    ctx.body = util.success({}, info)
   } catch (error) {
     console.error(`${ctx.method} - ${ctx.url} - ${error}`)
     ctx.body = util.fail(error.message)

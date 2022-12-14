@@ -34,21 +34,23 @@ router.post('/login', async (ctx) => {
       },
       'userId userName userEmail state role deptId roleList'
     )
-    if (res) {
-      const data = res._doc
-      // 生成token
-      const token = jwt.sign(
-        {
-          data,
-        },
-        'tangsssss',
-        { expiresIn: '1h' }
-      )
-      data.token = token
-      ctx.body = util.success(data)
+    if (!res) {
+      ctx.body = util.fail('账号或密码不正确', util.CODE.USER_ACCOUNT_ERROR)
       return
     }
-    ctx.body = util.fail('账号或密码不正确', util.CODE.USER_ACCOUNT_ERROR)
+    // 更新最后登陆时间
+    await User.updateMany({ userId: { $in: [res.userId] } }, { lastLoginTime: Date.now() })
+    const data = res._doc
+    // 生成token
+    const token = jwt.sign(
+      {
+        data,
+      },
+      'tangsssss',
+      { expiresIn: '1h' }
+    )
+    data.token = token
+    ctx.body = util.success(data)
   } catch (error) {
     console.error(`${ctx.method} - ${ctx.url} - ${error}`)
     ctx.body = util.fail(error.message)
@@ -91,7 +93,6 @@ router.post('/delete', async (ctx) => {
     const { userIds } = ctx.request.body
     // 软删除（把用户状态更改为离职）
     const res = await User.updateMany({ userId: { $in: userIds } }, { state: 2 })
-    console.log(res)
     if (res.modifiedCount) {
       ctx.body = util.success(res, `成功删除${res.modifiedCount}条`)
       return
@@ -112,7 +113,7 @@ router.post('/operate', async (ctx) => {
     const { userId, userName, userEmail, mobile, job, state, sex, roleList, deptId, action } = ctx.request.body
     if (action === 'add') {
       // 用户新增
-      console.log(!userEmail);
+      console.log(!userEmail)
       if (!userName || !userEmail || !deptId) {
         ctx.body = util.fail('参数错误', util.CODE.PARAM_ERROR)
         return

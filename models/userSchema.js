@@ -27,4 +27,4 @@ const userSchema = mongoose.Schema({
   }, //更新时间
   remark: String,
 })
-module.exports = mongoose.model("users", userSchema, "users");
+module.exports = mongoose.model("user", userSchema, "users");

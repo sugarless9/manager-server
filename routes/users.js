@@ -9,11 +9,6 @@ const jwt = require('jsonwebtoken')
 
 router.prefix('/users')
 
-// test
-router.get('/', (ctx) => {
-  ctx.body = 'tangsssss'
-})
-
 /**
  * 返回数据库指定字段，有三种方式
  * 1. 'userId userName userEmail state role deptId roleList' =>第二个参数

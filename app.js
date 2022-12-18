@@ -7,8 +7,10 @@ const bodyparser = require('koa-bodyparser')
 const logger = require('koa-logger')
 const koajwt = require('koa-jwt')
 const router = require('koa-router')()
-const users = require('./routes/users')
 const util = require('./utils/util')
+const users = require('./routes/users')
+const menus = require('./routes/menus')
+
 
 // 错误处理
 onerror(app)
@@ -58,6 +60,8 @@ app.use(
 // 路由
 router.prefix('/api')
 router.use(users.routes(), users.allowedMethods())
+router.use(menus.routes(), menus.allowedMethods())
+
 app.use(router.routes(), router.allowedMethods())
 
 // 错误处理

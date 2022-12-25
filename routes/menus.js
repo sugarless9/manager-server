@@ -9,13 +9,18 @@ router.prefix('/menus')
 
 // 菜单列表查询
 router.get('/list', async (ctx) => {
-  const { menuName, menuState } = ctx.request.query
-  const params = {}
-  if (menuName) params.menuName = menuName
-  if (menuState) params.menuState = menuState
-  let rootList = (await Menu.find(params)) || []
-  const permissionList = getTreeMenu(rootList, null, [])
-  ctx.body = util.success(permissionList)
+  try {
+    const { menuName, menuState } = ctx.request.query
+    const params = {}
+    if (menuName) params.menuName = menuName
+    if (menuState) params.menuState = menuState
+    let rootList = (await Menu.find(params)) || []
+    const permissionList = getTreeMenu(rootList, null, [])
+    ctx.body = util.success(permissionList)
+  } catch (error) {
+    console.error(`${ctx.method} - ${ctx.url} - ${error}`)
+    ctx.body = util.fail(error.message)
+  }
 })
 
 // 递归拼接树形列表
@@ -42,17 +47,17 @@ function getTreeMenu(rootList, id, list) {
 // 菜单编辑、删除、新增功能
 router.post('/operate', async (ctx) => {
   const { _id, action, ...params } = ctx.request.body
-  let res, info
+  let info
   try {
     if (action === 'add') {
-      res = await Menu.create(params)
+      await Menu.create(params)
       info = '创建成功'
     } else if (action === 'edit') {
       params.updateTime = Date.now()
-      res = await Menu.findByIdAndUpdate(_id, params)
+      await Menu.findByIdAndUpdate(_id, params)
       info = '编辑成功'
     } else {
-      res = await Menu.findByIdAndRemove(_id)
+      await Menu.findByIdAndRemove(_id)
       await Menu.deleteMany({ parentId: { $all: [_id] } })
       info = '删除成功'
     }

@@ -10,6 +10,7 @@ const router = require('koa-router')()
 const util = require('./utils/util')
 const users = require('./routes/users')
 const menus = require('./routes/menus')
+const roles = require('./routes/roles')
 
 
 // 错误处理
@@ -61,6 +62,7 @@ app.use(
 router.prefix('/api')
 router.use(users.routes(), users.allowedMethods())
 router.use(menus.routes(), menus.allowedMethods())
+router.use(roles.routes(), roles.allowedMethods())
 
 app.use(router.routes(), router.allowedMethods())
 

@@ -52,7 +52,18 @@ router.post('/login', async (ctx) => {
   }
 })
 
-// 用户列表
+// 查询所有用户列表
+router.get('/all/list', async (ctx) => {
+  try {
+    const res = await User.find({}, 'userId userName userEmail')
+    ctx.body = util.success(res)
+  } catch (error) {
+    console.error(`${ctx.method} - ${ctx.url} - ${error}`)
+    ctx.body = util.fail(error.message)
+  }
+})
+
+// 按页获取用户列表
 router.get('/list', async (ctx) => {
   try {
     // 获取查询参数
